@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  backend-container:
+    build: .
+    ports:
+      - "5000:5000"
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/generated
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
+    # Clean, direct command execution
+    entrypoint: sh -c "npx prisma migrate deploy && npm run dev"
