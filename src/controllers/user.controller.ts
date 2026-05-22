@@ -1,0 +1,22 @@
+import type { Response, Request } from "express";
+import type { AuthRequest } from "../middleware/auth.middleware";
+import { ApiResponseHandler } from "../utils/apiResponse";
+
+export const getUser = (req: AuthRequest, res: Response) => {
+    const userId = req.auth.userId;
+
+    if(!userId){
+        ApiResponseHandler.sendError(
+            res,
+            'Error getting the user',
+            400
+        )
+    }
+
+    ApiResponseHandler.sendSuccess(
+        res,
+        userId,
+        'You have securely accessed a protected route.',
+        200
+    )
+}
