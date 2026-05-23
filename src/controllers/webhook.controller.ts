@@ -1,3 +1,4 @@
+import { fgaClient } from '../utils/openfga.js';
 import { Webhook } from "svix";
 import type { Request, Response } from "express";
 import {prisma} from "../utils/prisma"
@@ -49,7 +50,7 @@ export const clerkWebhook = async (req: Request, res: Response) => {
         try {
             //create personal tenant
              // We use a Prisma Transaction so if one fails, both fail.
-            await prisma.$transaction(async (tx) => {
+            const createdTenant = await prisma.$transaction(async (tx) => {
 
                 const newTenant = await tx.tenant.create({
                     data: {
@@ -64,13 +65,24 @@ export const clerkWebhook = async (req: Request, res: Response) => {
                         clerkUserId: id,
                         baseRole: "ADMIN"
                     }
-                })
-            }) 
+                });
+                return newTenant;
+            }) ;
+
+            await fgaClient.write({
+                writes: [{
+                    user: `user:${id}`, // e.g. "user:user_2abc123"
+                    relation: 'admin',
+                    object: `tenant:${createdTenant.id}` // e.g. "tenant:uuid-1234"
+                }]
+            });
+
+           
 
             console.log(`Provisioned workspace for ${name}`);
         } catch (dbError: any) {
-            console.error('Database Error during webhook:', dbError);
-            return ApiResponseHandler.sendError(res, 'Database Error during webhook', 500);
+            console.error('Provisioning Error during webhook:', dbError);
+            return ApiResponseHandler.sendError(res, 'Provisioning Error during webhook:', 500);
         }
     }
     return res.status(200).json({ success: true });
