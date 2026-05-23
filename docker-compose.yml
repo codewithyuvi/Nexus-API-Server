@@ -1,4 +1,4 @@
-version: '3.8'
+# version: '3.8'
 
 services:
   backend-container:
@@ -18,4 +18,12 @@ services:
     # Clean, direct command execution
     entrypoint: sh -c "npx prisma migrate deploy && npm run dev"
 
-  
+  openFga:
+    image: openfga/openfga:latest
+    container_name: openfga
+    command: run
+    ports: 
+      - "8080:8080" #http api
+      - "8081:8081" #gRPC api
+      - "3001:3000" #Openfga playground ui
+    
