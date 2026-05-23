@@ -17,3 +17,5 @@ services:
       - DIRECT_URL=${DIRECT_URL}
     # Clean, direct command execution
     entrypoint: sh -c "npx prisma migrate deploy && npm run dev"
+
+  

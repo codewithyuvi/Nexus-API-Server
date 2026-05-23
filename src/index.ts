@@ -1,15 +1,18 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 
-import { ErrorHandler } from './middleware/error.middleware.js';
-import healthRoutes from './routes/health.routes.js';
-import userRoutes from './routes/user.routes.js';
+import { ErrorHandler } from './middleware/error.middleware';
+import healthRoutes from './routes/health.routes';
+import userRoutes from './routes/user.routes';
+import webHookRoutes from './routes/webhook.routes'
 
-dotenv.config();
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+app.use('/api/webhooks', webHookRoutes);
 
 app.use(express.json());
 app.use(cors({
