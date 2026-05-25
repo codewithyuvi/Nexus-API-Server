@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { OpenFgaClient } from '@openfga/sdk';
 
 async function setupOpenFGA() {
-  let storeId = process.env.FGA_STORE_ID;
+  let storeId = null;
   
   // Connect without a store ID first
   const fgaClient = new OpenFgaClient({
