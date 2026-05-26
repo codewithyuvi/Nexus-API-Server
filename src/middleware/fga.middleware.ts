@@ -1,14 +1,15 @@
-import type { Response, NextFunction } from "express";
+import type { Request ,Response, NextFunction } from "express";
 import type { AuthRequest } from "./auth.middleware";
 import { fgaClient } from "../utils/openfga";
 import { ApiResponseHandler } from "../utils/apiResponse";
 
 // This middleware factory lets us protect routes dynamically, e.g. requireFgaRole('admin')
-export const requireFgaRole = (relation: 'ADMIN' | 'MEMBER') => {
-    return async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const requireFgaRole = (relation: 'admin' | 'member') => {
+    return async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const userId = req.auth.userId;
-            const tenantId = req.auth.orgId; 
+            const authReq = req as unknown as AuthRequest;
+            const userId = authReq.auth.userId;
+            const tenantId = authReq.auth.orgId; 
             
             if(!userId || !tenantId){
                 return ApiResponseHandler.sendError(res, "Missing user id or active org", 401);
@@ -16,11 +17,9 @@ export const requireFgaRole = (relation: 'ADMIN' | 'MEMBER') => {
 
             // ask openfga the ultimate question
             const {allowed} = await fgaClient.check({
-                tuple_key: {
-                    user:  `user:${userId}`,
-                    relation: relation, // 'admin' or 'member'
-                    object: `tenant:${tenantId}`,
-                }
+                user:  `user:${userId}`,
+                relation: relation.toLowerCase(), // 'admin' or 'member'
+                object: `tenant:${tenantId}`,
             })
 
             if (!allowed) {

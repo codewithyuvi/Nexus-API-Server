@@ -5,13 +5,11 @@ import { getBoards, createBoard } from "../controllers/board.controller";
 
 const router = Router();
 
-// 1. Must have a valid Clerk token
+// Must have a valid Clerk token
 router.use(requireAuth); 
 
-// 2. Fetching boards -> Requires "member" access (Admins automatically get this per our FGA model!)
-router.get('/', requireFgaRole('MEMBER'), getBoards);
+router.get('/', requireFgaRole('member'), getBoards);
 
-// 3. Creating boards -> Requires strict "admin" access
-router.post('/', requireFgaRole('ADMIN'), createBoard);
+router.post('/', requireFgaRole('admin'), createBoard);
 
 export default router;

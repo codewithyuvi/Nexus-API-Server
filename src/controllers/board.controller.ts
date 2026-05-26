@@ -1,12 +1,13 @@
 import {prisma} from "../utils/prisma";
 import { ApiResponseHandler } from "../utils/apiResponse";
 import type { AuthRequest } from "../middleware/auth.middleware";
-import type { Response } from "express";
+import type { Request, Response } from "express";
 
 // POST /api/boards 
-export const createBoard = async (req: AuthRequest, res: Response) => {
+export const createBoard = async (req: Request, res: Response) => {
     try {
-        const tenantId = req.auth.orgId as string;
+        const authReq = req as unknown as AuthRequest;
+        const tenantId = authReq.auth.orgId as string;
         const { name, description } = req.body;
         if (!name) {
             return ApiResponseHandler.sendError(res, "Board name is required", 400);
@@ -24,7 +25,7 @@ export const createBoard = async (req: AuthRequest, res: Response) => {
                 slug
             }
         });
-        return ApiResponseHandler.sendSuccess(res, newBoard, 201);
+        return ApiResponseHandler.sendSuccess(res, newBoard);
     } catch (error) {
         console.error("Create Board Error:", error);
         return ApiResponseHandler.sendError(res, "Failed to create board", 500);
@@ -34,10 +35,11 @@ export const createBoard = async (req: AuthRequest, res: Response) => {
 
 
 // GET /api/boards
-export const getBoards = async (req: AuthRequest, res: Response) => {
+export const getBoards = async (req: Request, res: Response) => {
     
     try {
-        const tenantId = req.auth.orgId as string;
+        const authReq = req as unknown as AuthRequest;
+        const tenantId = authReq.auth.orgId as string;
     
         const boards = await prisma.board.findMany({
             where: {tenantId: tenantId},
