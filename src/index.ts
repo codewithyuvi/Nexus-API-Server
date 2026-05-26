@@ -6,7 +6,7 @@ import { ErrorHandler } from './middleware/error.middleware';
 import healthRoutes from './routes/health.routes';
 import userRoutes from './routes/user.routes';
 import webHookRoutes from './routes/webhook.routes'
-
+import boardRoutes from './routes/board.routes';
 
 
 const app = express();
@@ -20,11 +20,14 @@ app.use(cors({
   credentials: true, 
 }));
 
-// 2. Register Routes
+// Register Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/user', userRoutes);
 
-// 3. Global Error Handler (MUST be the very last middleware)
+// Board Routes
+app.use('/api/boards', boardRoutes);
+
+// Global Error Handler (MUST be the very last middleware)
 app.use(ErrorHandler);
 
 app.listen(PORT, () => {
