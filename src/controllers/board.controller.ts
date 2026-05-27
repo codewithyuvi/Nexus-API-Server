@@ -54,3 +54,23 @@ export const getBoards = async (req: Request, res: Response) => {
 
 }
 
+// DELETE /api/boards/:boardId
+export const deleteBoard = async (req: Request, res: Response) => {
+    try {
+        const authReq = req as unknown as AuthRequest;
+        const tenantId = (authReq.auth.orgId || (authReq.auth.claims as any)?.o?.id) as string;
+        const boardId = req.params.boardId as string;
+
+        await prisma.board.delete({
+            where: {
+                id: boardId,
+                tenantId: tenantId
+            }
+        });
+
+        return ApiResponseHandler.sendSuccess(res, { message: "Board deleted successfully" });
+    } catch (error) {
+        console.error("Delete Board Error:", error);
+        return ApiResponseHandler.sendError(res, "Failed to delete board", 500);
+    }
+};
