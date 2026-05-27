@@ -1,0 +1,15 @@
+model
+  schema 1.1
+
+type user
+
+type tenant
+  relations
+    define admin: [user]
+    define member: [user] or admin
+
+type board
+  relations
+    define parent_tenant: [tenant]
+    define viewer: member from parent_tenant
+    define admin: admin from parent_tenant

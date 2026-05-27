@@ -6,8 +6,8 @@
   "types": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/script.js",
-    "dev": "tsx watch src/script.ts"
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts"
   },
   "repository": {
     "type": "git",
@@ -22,6 +22,8 @@
   },
   "homepage": "https://github.com/codewithyuvi/Nexus-API-Server#readme",
   "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
     "@types/pg": "^8.20.0",
     "prisma": "^7.8.0",
@@ -29,9 +31,15 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "@clerk/backend": "^3.4.12",
+    "@clerk/clerk-sdk-node": "^4.13.23",
+    "@openfga/sdk": "^0.9.6",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "cors": "^2.8.6",
     "dotenv": "^17.4.2",
-    "pg": "^8.21.0"
+    "express": "^5.2.1",
+    "pg": "^8.21.0",
+    "svix": "^1.94.0"
   }
 }
