@@ -9,7 +9,8 @@ export const requireFgaRole = (relation: 'admin' | 'member') => {
         try {
             const authReq = req as unknown as AuthRequest;
             const userId = authReq.auth.userId;
-            const tenantId = authReq.auth.orgId; 
+            const tenantId = authReq.auth.orgId || (authReq.auth.claims?.o as any)?.id;
+            
             
             if(!userId || !tenantId){
                 return ApiResponseHandler.sendError(res, "Missing user id or active org", 401);

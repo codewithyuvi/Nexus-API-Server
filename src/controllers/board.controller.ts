@@ -7,7 +7,7 @@ import type { Request, Response } from "express";
 export const createBoard = async (req: Request, res: Response) => {
     try {
         const authReq = req as unknown as AuthRequest;
-        const tenantId = authReq.auth.orgId as string;
+        const tenantId = (authReq.auth.orgId || (authReq.auth.claims as any)?.o?.id) as string;
         const { name, description } = req.body;
         if (!name) {
             return ApiResponseHandler.sendError(res, "Board name is required", 400);
