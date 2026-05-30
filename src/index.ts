@@ -7,7 +7,7 @@ import healthRoutes from './routes/health.routes';
 import userRoutes from './routes/user.routes';
 import webHookRoutes from './routes/webhook.routes'
 import boardRoutes from './routes/board.routes';
-import apiKeyRoutes from './routes/apiKey.routes';
+import apiKeyRoutes from './routes/apikey.routes';
 import publicRoutes from './routes/public.routes';
 
 const app = express();
