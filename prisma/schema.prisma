@@ -24,6 +24,8 @@ model Tenant {
   boards      Board[]
   posts       Post[]
   comments    Comment[]
+  upvotes     Upvote[]
+  apiKeys     ApiKey[]
 }
 
 model TenantMember {
@@ -79,6 +81,7 @@ model Post {
 
 
   comments  Comment[]
+  upvotes   Upvote[]
 
   @@index([tenantId]) // Performance anchor for multi-tenant database partitioning checks
   @@index([boardId]) // Index designed to fast-track board loading operations on public end-user portals
@@ -103,4 +106,32 @@ model Comment {
 
   @@index([tenantId]) // Guarantees fast access speeds during multitenant multi-tenant connection queries
   @@index([postId]) // Accelerates loading speeds when building interactive public user discussion boards
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([tenantId]) // Fast lookups when authenticating requests!
+}
+
+model Upvote {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  authorId  String   // The ID of the end-user (from the external customer's system)
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, authorId]) // Crucial: Prevents the same user from upvoting the same post twice
+  @@index([tenantId])
 }

@@ -11,7 +11,11 @@ export const getPosts = async (req: Request, res: Response) => {
 
         const posts = await prisma.post.findMany({
             where: { tenantId, boardId },
-            orderBy: { createdAt: 'desc' }
+            orderBy: { createdAt: 'desc' },
+            include: {
+                comments: { orderBy: { createdAt: 'asc' } },
+                _count: { select: { upvotes: true } }
+            }
         });
 
         return ApiResponseHandler.sendSuccess(res, posts);
@@ -92,5 +96,31 @@ export const updatePostStatus = async (req: Request, res: Response) => {
     } catch (error) {
         console.error("Update Post Error:", error);
         return ApiResponseHandler.sendError(res, "Failed to update post", 500);
+    }
+};
+
+export const toggleUpvote = async (req: Request, res: Response) => {
+    try {
+        const authReq = req as unknown as AuthRequest;
+        const tenantId = (authReq.auth.orgId || (authReq.auth.claims as any)?.o?.id) as string;
+        const userId = authReq.auth.userId;
+        const postId = req.params.postId as string;
+
+        const existingVote = await prisma.upvote.findUnique({
+            where: { postId_authorId: { postId, authorId: userId } }
+        });
+
+        if (existingVote) {
+            await prisma.upvote.delete({ where: { id: existingVote.id } });
+            return ApiResponseHandler.sendSuccess(res, { voted: false });
+        } else {
+            await prisma.upvote.create({
+                data: { tenantId, postId, authorId: userId }
+            });
+            return ApiResponseHandler.sendSuccess(res, { voted: true });
+        }
+    } catch (error) {
+        console.error("Internal Upvote Error:", error);
+        return ApiResponseHandler.sendError(res, "Failed to toggle upvote", 500);
     }
 };

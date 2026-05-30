@@ -2,8 +2,9 @@ import type { Response, Request } from "express";
 import type { AuthRequest } from "../middleware/auth.middleware";
 import { ApiResponseHandler } from "../utils/apiResponse";
 
-export const getUser = (req: AuthRequest, res: Response) => {
-    const userId = req.auth.userId;
+export const getUser = (req: Request, res: Response) => {
+    const authReq = req as unknown as AuthRequest;
+    const userId = authReq.auth.userId;
 
     if(!userId){
         ApiResponseHandler.sendError(
