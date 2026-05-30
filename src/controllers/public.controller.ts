@@ -18,7 +18,12 @@ export const getPublicBoard = async (req: Request, res: Response) => {
             include: {
                 posts: {
                     where: { status: "OPEN" }, // Only show open posts to the public
-                    orderBy: { createdAt: 'desc' }
+                    orderBy: { createdAt: 'desc' },
+                    include: {
+                        _count: {
+                            select: { upvotes: true, comments: true }
+                        }
+                    }
                 }
             }
         });
@@ -58,5 +63,35 @@ export const createPublicPost = async (req: Request, res: Response) => {
     } catch (error) {
         console.error("Create Public Post Error:", error);
         return ApiResponseHandler.sendError(res, "Failed to submit post", 500);
+    }
+};
+
+export const publicUpvotePost = async (req: Request, res: Response) => {
+    try {
+        const publicReq = req as unknown as PublicApiRequest;
+        const tenantId = publicReq.tenantId as string;
+        const postId = req.params.postId as string;
+        const { authorId } = req.body;
+
+        if (!authorId) {
+            return ApiResponseHandler.sendError(res, "authorId is required to upvote", 400);
+        }
+
+        const existingVote = await prisma.upvote.findUnique({
+            where: { postId_authorId: { postId, authorId } }
+        });
+
+        if (existingVote) {
+            await prisma.upvote.delete({ where: { id: existingVote.id } });
+            return ApiResponseHandler.sendSuccess(res, { voted: false });
+        } else {
+            await prisma.upvote.create({
+                data: { tenantId, postId, authorId }
+            });
+            return ApiResponseHandler.sendSuccess(res, { voted: true });
+        }
+    } catch (error) {
+        console.error("Public Upvote Error:", error);
+        return ApiResponseHandler.sendError(res, "Failed to toggle upvote", 500);
     }
 };
