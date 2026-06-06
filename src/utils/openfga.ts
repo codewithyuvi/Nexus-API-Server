@@ -1,12 +1,23 @@
-import { OpenFgaClient } from '@openfga/sdk';
+import { OpenFgaClient, CredentialsMethod } from '@openfga/sdk';
 
 const storeId = process.env.FGA_STORE_ID;
 
 if (!storeId) {
-  throw new Error('FGA_STORE_ID is missing in environment variables');
+  console.warn('FGA_STORE_ID is missing in environment variables');
 }
 
 export const fgaClient = new OpenFgaClient({
-  apiUrl: process.env.FGA_API_URL || 'http://localhost:8080',
-  storeId,
+  apiUrl: process.env.FGA_API_URL || "https://api.us1.fga.dev",
+  storeId: storeId || "",
+  ...(process.env.FGA_CLIENT_ID && {
+    credentials: {
+      method: CredentialsMethod.ClientCredentials,
+      config: {
+        apiTokenIssuer: "auth.fga.dev",
+        apiAudience: "https://api.us1.fga.dev/",
+        clientId: process.env.FGA_CLIENT_ID,
+        clientSecret: process.env.FGA_CLIENT_SECRET!,
+      },
+    },
+  }),
 });
