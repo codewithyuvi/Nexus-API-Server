@@ -35,7 +35,7 @@ app.use('/api/v1/public', publicRoutes);
 
 
 
-// Global Error Handler (MUST be the very last middleware)
+// Global Error Handler 
 app.use(ErrorHandler);
 
 

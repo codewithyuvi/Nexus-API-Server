@@ -6,7 +6,7 @@ async function setupOpenFGA() {
   
   // Connect without a store ID first
   const fgaClient = new OpenFgaClient({
-    apiUrl: 'http://localhost:8080',
+    apiUrl: process.env.FGA_API_URL || 'http://localhost:8080',
   });
 
   if (!storeId) {
@@ -21,7 +21,7 @@ async function setupOpenFGA() {
 
   // Connect with the Store ID so we can write the model
   const clientWithStore = new OpenFgaClient({
-    apiUrl: 'http://localhost:8080',
+    apiUrl: process.env.FGA_API_URL || 'http://localhost:8080',
     storeId: storeId,
   });
 
