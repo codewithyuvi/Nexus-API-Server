@@ -39,8 +39,12 @@ export const getBoards = async (req: Request, res: Response) => {
     
     try {
         const authReq = req as unknown as AuthRequest;
-        const tenantId = authReq.auth.orgId as string;
+        const tenantId = (authReq.auth.orgId || (authReq.auth.claims as any)?.o?.id) as string;
     
+        if (!tenantId) {
+            return ApiResponseHandler.sendError(res, "Organization context is missing", 400);
+        }
+
         const boards = await prisma.board.findMany({
             where: {tenantId: tenantId},
             orderBy: {createdAt: 'desc'}

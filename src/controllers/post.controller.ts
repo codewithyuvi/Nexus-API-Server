@@ -9,6 +9,10 @@ export const getPosts = async (req: Request, res: Response) => {
         const tenantId = (authReq.auth.orgId || (authReq.auth.claims as any)?.o?.id) as string;
         const boardId = req.params.boardId as string;
 
+        if (!tenantId) {
+            return ApiResponseHandler.sendError(res, "Organization context is missing", 400);
+        }
+
         const posts = await prisma.post.findMany({
             where: { tenantId, boardId },
             orderBy: { createdAt: 'desc' },
