@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 
+import './workers/post.worker';
 import { ErrorHandler } from './middleware/error.middleware';
 import healthRoutes from './routes/health.routes';
 import userRoutes from './routes/user.routes';
