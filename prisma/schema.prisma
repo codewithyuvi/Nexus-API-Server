@@ -26,6 +26,7 @@ model Tenant {
   comments    Comment[]
   upvotes     Upvote[]
   apiKeys     ApiKey[]
+  auditLogs   AuditLog[]
 }
 
 model TenantMember {
@@ -134,4 +135,19 @@ model Upvote {
 
   @@unique([postId, authorId]) // Crucial: Prevents the same user from upvoting the same post twice
   @@index([tenantId])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  userId    String   // Clerk User ID of the person who did the action
+  action    String   // Example: "BOARD_CREATED", "POST_DELETED"
+  entityId  String   // The ID of the thing they modified
+  details   String?  // Optional extra info
+
+  createdAt DateTime @default(now())
+
+  @@index([tenantId]) // Makes fetching logs for an org super fast
 }

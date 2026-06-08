@@ -2,6 +2,7 @@ import {prisma} from "../utils/prisma";
 import { ApiResponseHandler } from "../utils/apiResponse";
 import type { AuthRequest } from "../middleware/auth.middleware";
 import type { Request, Response } from "express";
+import { auditLogsQueue } from "../queues/audit.queue";
 
 // POST /api/boards 
 export const createBoard = async (req: Request, res: Response) => {
@@ -25,6 +26,19 @@ export const createBoard = async (req: Request, res: Response) => {
                 slug
             }
         });
+
+// auditing logs
+        await auditLogsQueue.add(
+            'logs',
+            {
+                tenantId,
+                userId: authReq.auth.userId,
+                action: 'BOARD_CREATED',
+                entityId: newBoard.id,
+                details: JSON.stringify({ name: newBoard.name })
+            }
+        )
+
         return ApiResponseHandler.sendSuccess(res, newBoard);
     } catch (error) {
         console.error("Create Board Error:", error);
@@ -65,12 +79,24 @@ export const deleteBoard = async (req: Request, res: Response) => {
         const tenantId = (authReq.auth.orgId || (authReq.auth.claims as any)?.o?.id) as string;
         const boardId = req.params.boardId as string;
 
-        await prisma.board.delete({
+        const deletedBoard = await prisma.board.delete({
             where: {
                 id: boardId,
                 tenantId: tenantId
             }
         });
+
+        // auditing logs
+        await auditLogsQueue.add(
+            'logs',
+            {
+                tenantId,
+                userId: authReq.auth.userId,
+                action: 'BOARD_DELETED',
+                entityId: deletedBoard.id,
+                details: JSON.stringify({ name: deletedBoard.name })
+            }
+        )
 
         return ApiResponseHandler.sendSuccess(res, { message: "Board deleted successfully" });
     } catch (error) {

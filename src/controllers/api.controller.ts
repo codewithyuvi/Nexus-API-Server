@@ -3,6 +3,7 @@ import { ApiResponseHandler } from "../utils/apiResponse";
 import type { AuthRequest } from "../middleware/auth.middleware";
 import type { Request, Response } from "express";
 import crypto from "crypto"; 
+import { auditLogsQueue } from "../queues/audit.queue";
 
 // GET /api/keys
 export const getKeys = async (req: Request, res: Response) => {
@@ -39,6 +40,13 @@ export const generateKey = async (req: Request, res: Response) => {
             }
         });
 
+        await auditLogsQueue.add("logs", {
+            tenantId,
+            userId: authReq.auth.userId,
+            action: "API_KEY_CREATED",
+            entityId: newKey.id
+        });
+
         return ApiResponseHandler.sendSuccess(res, newKey);
     } catch (error) {
         console.error("Generate Key Error:", error);
@@ -56,6 +64,13 @@ export const revokeKey = async (req: Request, res: Response) => {
         // Prisma checks both ID and tenantId to prevent someone from revoking another company's key
         await prisma.apiKey.delete({
             where: { id: keyId, tenantId } 
+        });
+
+        await auditLogsQueue.add("logs", {
+            tenantId,
+            userId: authReq.auth.userId,
+            action: "API_KEY_REVOKED",
+            entityId: keyId
         });
 
         return ApiResponseHandler.sendSuccess(res, { message: "API Key revoked" });

@@ -1,7 +1,7 @@
 import { Worker } from "bullmq";
 import { prisma } from "../utils/prisma";
 
-const redisConnection = { host: "127.0.0.1", port: 6379 };
+import { redisConnection } from "../constants/redisConnection";
 
 const ticketJob = async (job:any) => {
   const { tenantId, userId, newPost } = job.data;
