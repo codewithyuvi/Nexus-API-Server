@@ -52,6 +52,20 @@ export const createPost = async (req: Request, res: Response) => {
             }
         });
 
+        //testing the dealy, delete from here to
+        for(let i=0; i<50; i++){
+            await prisma.comment.create({
+                data: {
+                    tenantId,
+                    authorId: userId,
+                    postId: newPost.id,
+                    content: `comment ${i}`,
+                    isInternal: false
+                }
+            })
+        }
+        // here
+
         return ApiResponseHandler.sendSuccess(res, newPost);
     } catch (error) {
         console.error("Create Post Error:", error);
