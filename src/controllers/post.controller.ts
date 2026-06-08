@@ -3,9 +3,6 @@ import { ApiResponseHandler } from "../utils/apiResponse";
 import type { AuthRequest } from "../middleware/auth.middleware";
 import type { Request, Response } from "express";
 import { auditLogsQueue } from "../queues/audit.queue";
-
-// import { postQueue } from "../queues/post.queue";
-
 export const getPosts = async (req: Request, res: Response) => {
   try {
     const authReq = req as unknown as AuthRequest;
@@ -64,22 +61,6 @@ export const createPost = async (req: Request, res: Response) => {
         authorId: userId,
       },
     });
-
-    
-    // await postQueue.add("create_dummy_comments", {tenantId, userId, newPost});
-
-    // for (let i = 0; i < 500; i++) {
-    //   await prisma.comment.create({
-    //     data: {
-    //       tenantId,
-    //       authorId: userId,
-    //       postId: newPost.id,
-    //       content: `comment ${i}`,
-    //       isInternal: false,
-    //     },
-    //   });
-    // }
-
 
     // auditing logs
         await auditLogsQueue.add(

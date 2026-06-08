@@ -1,4 +1,0 @@
-import { Queue } from "bullmq";
-import { redisConnection } from "../constants/redisConnection";
-
-export const postQueue = new Queue('PostQueue', {connection: redisConnection});
