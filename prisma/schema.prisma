@@ -29,6 +29,8 @@ model Tenant {
   auditLogs   AuditLog[]
   razorpayCustomerId     String?   @unique
   razorpaySubscriptionId String?
+  webhookUrl             String?
+  webhookSecret          String?
 }
 
 model TenantMember {

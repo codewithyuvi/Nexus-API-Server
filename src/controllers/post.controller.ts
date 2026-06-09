@@ -3,6 +3,7 @@ import { ApiResponseHandler } from "../utils/apiResponse";
 import type { AuthRequest } from "../middleware/auth.middleware";
 import type { Request, Response } from "express";
 import { auditLogsQueue } from "../queues/audit.queue";
+import { dispatchWebhook } from "../queues/outboundWebhook.queue";
 export const getPosts = async (req: Request, res: Response) => {
   try {
     const authReq = req as unknown as AuthRequest;
@@ -62,7 +63,7 @@ export const createPost = async (req: Request, res: Response) => {
       },
     });
 
-    // auditing logs
+        // auditing logs
         await auditLogsQueue.add(
             'logs',
             {
@@ -73,6 +74,10 @@ export const createPost = async (req: Request, res: Response) => {
                 details: JSON.stringify({ Post_Title: newPost.title })
             }
         )
+        
+        // Also fire the webhook for internal posts so the customer's server stays in sync!
+        dispatchWebhook(tenantId, 'post.created', newPost);
+        
     return ApiResponseHandler.sendSuccess(res, newPost);
   } catch (error) {
     console.error("Create Post Error:", error);

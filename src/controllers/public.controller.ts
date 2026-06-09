@@ -2,7 +2,7 @@ import { prisma } from "../utils/prisma";
 import { ApiResponseHandler } from "../utils/apiResponse";
 import type { PublicApiRequest } from "../middleware/api.middleware";
 import type { Response, Request } from "express";
-import type { PathUnknownErrorMessageResponse } from "@openfga/sdk";
+import { dispatchWebhook } from "../queues/outboundWebhook.queue";
 
 // GET /api/v1/public/boards/:slug
 export const getPublicBoard = async (req: Request, res: Response) => {
@@ -49,6 +49,7 @@ export const createPublicPost = async (req: Request, res: Response) => {
             return ApiResponseHandler.sendError(res, "Title, description, and authorId are required", 400);
         }
 
+        console.log("Before new post");
         const newPost = await prisma.post.create({
             data: {
                 tenantId,
@@ -58,6 +59,10 @@ export const createPublicPost = async (req: Request, res: Response) => {
                 authorId 
             }
         });
+        console.log("sending webhoook...");
+        // We do not 'await' this! We drop it in the queue and instantly return the API response to the user so they don't have to wait for the webhook to send.
+        dispatchWebhook(tenantId, 'post.created', newPost);
+        console.log("webhoook sent");
 
         return ApiResponseHandler.sendSuccess(res, newPost);
     } catch (error) {

@@ -13,6 +13,7 @@ import billingRoutes from './routes/billing.routes';
 import './workers/audit.worker';
 import './workers/billing.worker';
 import './queues/billing.queue';
+import './workers/outboundWebhook.worker';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
