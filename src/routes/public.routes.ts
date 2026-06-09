@@ -1,14 +1,18 @@
 import { Router } from "express";
 import { requireApiKey } from "../middleware/api.middleware";
-import { getPublicBoard, createPublicPost, publicUpvotePost } from "../controllers/public.controller";
+import { getPublicBoard, createPublicPost, publicUpvotePost, createPublicComment } from "../controllers/public.controller";
+import { trackApiUsage } from "../middleware/apiUsage.middleware";
 
 const router = Router();
 
 // EVERY route in this file requires a valid API Key!
 router.use(requireApiKey as any);
 
+router.use(trackApiUsage as any);
+
 router.get('/boards/:slug', getPublicBoard as any);
 router.post('/boards/:boardId/posts', createPublicPost as any);
 router.post('/posts/:postId/upvote', publicUpvotePost as any);
+router.post('/posts/:postId/comments', createPublicComment as any);
 
 export default router;

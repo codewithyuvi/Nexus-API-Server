@@ -95,3 +95,33 @@ export const publicUpvotePost = async (req: Request, res: Response) => {
         return ApiResponseHandler.sendError(res, "Failed to toggle upvote", 500);
     }
 };
+
+// POST /api/v1/public/posts/:postId/comments
+export const createPublicComment = async (req: Request, res: Response) => {
+    try {
+        const publicReq = req as unknown as PublicApiRequest;
+        const tenantId = publicReq.tenantId as string;
+        const postId = req.params.postId as string;
+        const { content, authorId, authorName } = req.body;
+
+        if (!content || !authorId) {
+            return ApiResponseHandler.sendError(res, "content and authorId are required", 400);
+        }
+
+        const newComment = await prisma.comment.create({
+            data: {
+                tenantId,
+                postId,
+                content,
+                authorId,
+                authorName,
+                isInternal: false // Since this comes from the Public API, it is NOT an internal team note
+            }
+        });
+
+        return ApiResponseHandler.sendSuccess(res, newComment);
+    } catch (error) {
+        console.error("Create Public Comment Error:", error);
+        return ApiResponseHandler.sendError(res, "Failed to submit comment", 500);
+    }
+};

@@ -3,6 +3,7 @@ import { Webhook } from "svix";
 import type { Request, Response } from "express";
 import { prisma } from "../utils/prisma";
 import { ApiResponseHandler } from "../utils/apiResponse";
+import { createRazorpayCustomer } from "../utils/razorpay.js";
 
 export const clerkWebhook = async (req: Request, res: Response) => {
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
@@ -47,12 +48,14 @@ export const clerkWebhook = async (req: Request, res: Response) => {
     const { id, name, created_by } = event.data;
 
     try {
+      const rzpCustomerId = await createRazorpayCustomer(name, id);
       const createdTenant = await prisma.$transaction(async (tx) => {
         const newTenant = await tx.tenant.create({
           data: {
             id: id, // We use the exact Clerk Org ID as our Postgres ID!
             name: name,
             slug: `${name.toLowerCase().replace(/[^a-z0-9]/g, "-")}-${Date.now().toString().slice(-4)}`,
+            razorpayCustomerId: rzpCustomerId 
           },
         });
 
