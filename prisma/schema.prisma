@@ -27,6 +27,8 @@ model Tenant {
   upvotes     Upvote[]
   apiKeys     ApiKey[]
   auditLogs   AuditLog[]
+  razorpayCustomerId     String?   @unique
+  razorpaySubscriptionId String?
 }
 
 model TenantMember {
