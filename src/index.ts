@@ -4,6 +4,7 @@ import cors from 'cors';
 
 import './workers/audit.worker';
 import { ErrorHandler } from './middleware/error.middleware';
+import { trackApiUsage } from './middleware/apiUsage.middleware';
 import healthRoutes from './routes/health.routes';
 import userRoutes from './routes/user.routes';
 import webHookRoutes from './routes/webhook.routes'
@@ -21,6 +22,8 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000', 
   credentials: true, 
 }));
+
+app.use(trackApiUsage);
 
 // Register Routes
 app.use('/api/health', healthRoutes);
