@@ -122,6 +122,9 @@ export const createPublicComment = async (req: Request, res: Response) => {
             return ApiResponseHandler.sendError(res, "content and authorId are required", 400);
         }
 
+        const post = await prisma.post.findUnique({ where: { id: postId }, select: { boardId: true } });
+        if (!post) return ApiResponseHandler.sendError(res, "Post not found", 404);
+
         const newComment = await prisma.comment.create({
             data: {
                 tenantId,
@@ -132,6 +135,8 @@ export const createPublicComment = async (req: Request, res: Response) => {
                 isInternal: false // Since this comes from the Public API, it is NOT an internal team note
             }
         });
+
+        io.to(post.boardId).emit("comment-created", { postId, comment: newComment });
 
         return ApiResponseHandler.sendSuccess(res, newComment);
     } catch (error) {
