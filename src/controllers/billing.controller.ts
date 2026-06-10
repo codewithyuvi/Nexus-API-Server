@@ -66,3 +66,27 @@ export const verifySubscription = async (req: Request, res: Response) => {
         return ApiResponseHandler.sendError(res, "Failed to verify subscription", 500);
     }
 };
+
+// GET /api/billing/credits
+export const getCredits = async (req: Request, res: Response) => {
+    try {
+        const authReq = req as unknown as AuthRequest;
+        const tenantId = authReq.auth.orgId || (authReq.auth.claims as any)?.o?.id;
+
+        if (!tenantId) {
+            return ApiResponseHandler.sendError(res, "Organization required", 401);
+        }
+
+        const tenant = await prisma.tenant.findUnique({
+            where: { id: tenantId },
+            select: { apiCredits: true }
+        });
+
+        if (!tenant) return ApiResponseHandler.sendError(res, "Tenant not found", 404);
+
+        return ApiResponseHandler.sendSuccess(res, { credits: tenant.apiCredits });
+    } catch (error) {
+        console.error("Get Credits Error:", error);
+        return ApiResponseHandler.sendError(res, "Failed to fetch credits", 500);
+    }
+};
