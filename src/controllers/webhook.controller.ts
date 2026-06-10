@@ -131,6 +131,19 @@ export const clerkWebhook = async (req: Request, res: Response) => {
       return ApiResponseHandler.sendError(res, "Membership Error", 500);
     }
   }
+  if (eventType === "organization.deleted") {
+    const { id } = event.data;
+    try {
+      await prisma.tenant.delete({
+        where: { id: id },
+      });
+      console.log(`Deleted B2B Organization from database: ${id}`);
+    } catch (dbError: any) {
+      console.error("Organization Deletion Error:", dbError);
+      // We don't return 500 here because the tenant might have already been deleted.
+    }
+  }
+
   // 3. General User Signup (No longer creates a workspace)
   if (eventType === "user.created") {
     console.log(
