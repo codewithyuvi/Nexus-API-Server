@@ -100,6 +100,8 @@ export const deletePost = async (req: Request, res: Response) => {
       where: { id: postId, boardId, tenantId },
     });
 
+    io.to(boardId).emit("post-deleted", { postId });
+
     // auditing logs
     await auditLogsQueue.add("logs", {
       tenantId,
@@ -135,6 +137,8 @@ export const updatePostStatus = async (req: Request, res: Response) => {
       data: { status },
     });
 
+    io.to(boardId).emit("post-updated", { postId, status });
+
     await auditLogsQueue.add("logs", {
       tenantId,
       userId: authReq.auth.userId,
@@ -157,6 +161,7 @@ export const toggleUpvote = async (req: Request, res: Response) => {
       (authReq.auth.claims as any)?.o?.id) as string;
     const userId = authReq.auth.userId;
     const postId = req.params.postId as string;
+    const boardId = req.params.boardId as string;
 
     const existingVote = await prisma.upvote.findUnique({
       where: { postId_authorId: { postId, authorId: userId } },
@@ -164,6 +169,7 @@ export const toggleUpvote = async (req: Request, res: Response) => {
 
     if (existingVote) {
       await prisma.upvote.delete({ where: { id: existingVote.id } });
+      io.to(boardId).emit("post-upvoted", { postId, increment: -1 });
       await auditLogsQueue.add("logs", {
         tenantId,
         userId: authReq.auth.userId,
@@ -175,6 +181,7 @@ export const toggleUpvote = async (req: Request, res: Response) => {
       await prisma.upvote.create({
         data: { tenantId, postId, authorId: userId },
       });
+      io.to(boardId).emit("post-upvoted", { postId, increment: 1 });
       await auditLogsQueue.add("logs", {
         tenantId,
         userId: authReq.auth.userId,

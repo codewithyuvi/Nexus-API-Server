@@ -90,13 +90,18 @@ export const publicUpvotePost = async (req: Request, res: Response) => {
             where: { postId_authorId: { postId, authorId } }
         });
 
+        const post = await prisma.post.findUnique({ where: { id: postId }, select: { boardId: true } });
+        if (!post) return ApiResponseHandler.sendError(res, "Post not found", 404);
+
         if (existingVote) {
             await prisma.upvote.delete({ where: { id: existingVote.id } });
+            io.to(post.boardId).emit("post-upvoted", { postId, increment: -1 });
             return ApiResponseHandler.sendSuccess(res, { voted: false });
         } else {
             await prisma.upvote.create({
                 data: { tenantId, postId, authorId }
             });
+            io.to(post.boardId).emit("post-upvoted", { postId, increment: 1 });
             return ApiResponseHandler.sendSuccess(res, { voted: true });
         }
     } catch (error) {
