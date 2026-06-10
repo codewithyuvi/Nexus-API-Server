@@ -31,6 +31,7 @@ model Tenant {
   razorpaySubscriptionId String?
   webhookUrl             String?
   webhookSecret          String?
+  apiCredits             Int       @default(0)
 }
 
 model TenantMember {
