@@ -4,6 +4,8 @@ import type { AuthRequest } from "../middleware/auth.middleware";
 import type { Request, Response } from "express";
 import { auditLogsQueue } from "../queues/audit.queue";
 import { dispatchWebhook } from "../queues/outboundWebhook.queue";
+import { io } from "../index";
+
 export const getPosts = async (req: Request, res: Response) => {
   try {
     const authReq = req as unknown as AuthRequest;
@@ -63,21 +65,21 @@ export const createPost = async (req: Request, res: Response) => {
       },
     });
 
-        // auditing logs
-        await auditLogsQueue.add(
-            'logs',
-            {
-                tenantId,
-                userId: authReq.auth.userId,
-                action: 'POST_CREATED',
-                entityId: newPost.id,
-                details: JSON.stringify({ Post_Title: newPost.title })
-            }
-        )
-        
-        // Also fire the webhook for internal posts so the customer's server stays in sync!
-        dispatchWebhook(tenantId, 'post.created', newPost);
-        
+    // auditing logs
+    await auditLogsQueue.add("logs", {
+      tenantId,
+      userId: authReq.auth.userId,
+      action: "POST_CREATED",
+      entityId: newPost.id,
+      details: JSON.stringify({ Post_Title: newPost.title }),
+    });
+
+    // Also fire the webhook for internal posts so the customer's server stays in sync!
+    dispatchWebhook(tenantId, "post.created", newPost);
+
+    //boardcast 
+    io.to(boardId).emit("post-created", newPost);
+    
     return ApiResponseHandler.sendSuccess(res, newPost);
   } catch (error) {
     console.error("Create Post Error:", error);
@@ -99,16 +101,13 @@ export const deletePost = async (req: Request, res: Response) => {
     });
 
     // auditing logs
-        await auditLogsQueue.add(
-            'logs',
-            {
-                tenantId,
-                userId: authReq.auth.userId,
-                action: 'POST_DELETED',
-                entityId: deletedPost.id,
-                details: JSON.stringify({ title: deletedPost.title })
-            }
-        )
+    await auditLogsQueue.add("logs", {
+      tenantId,
+      userId: authReq.auth.userId,
+      action: "POST_DELETED",
+      entityId: deletedPost.id,
+      details: JSON.stringify({ title: deletedPost.title }),
+    });
 
     return ApiResponseHandler.sendSuccess(res, { message: "Post deleted" });
   } catch (error) {
@@ -166,7 +165,10 @@ export const toggleUpvote = async (req: Request, res: Response) => {
     if (existingVote) {
       await prisma.upvote.delete({ where: { id: existingVote.id } });
       await auditLogsQueue.add("logs", {
-        tenantId, userId: authReq.auth.userId, action: "POST_UPVOTE_REMOVED", entityId: postId
+        tenantId,
+        userId: authReq.auth.userId,
+        action: "POST_UPVOTE_REMOVED",
+        entityId: postId,
       });
       return ApiResponseHandler.sendSuccess(res, { voted: false });
     } else {
@@ -174,7 +176,10 @@ export const toggleUpvote = async (req: Request, res: Response) => {
         data: { tenantId, postId, authorId: userId },
       });
       await auditLogsQueue.add("logs", {
-        tenantId, userId: authReq.auth.userId, action: "POST_UPVOTED", entityId: postId
+        tenantId,
+        userId: authReq.auth.userId,
+        action: "POST_UPVOTED",
+        entityId: postId,
       });
       return ApiResponseHandler.sendSuccess(res, { voted: true });
     }

@@ -3,6 +3,7 @@ import { ApiResponseHandler } from "../utils/apiResponse";
 import type { PublicApiRequest } from "../middleware/api.middleware";
 import type { Response, Request } from "express";
 import { dispatchWebhook } from "../queues/outboundWebhook.queue";
+import {io} from "../index";
 
 // GET /api/v1/public/boards/:slug
 export const getPublicBoard = async (req: Request, res: Response) => {
@@ -59,10 +60,13 @@ export const createPublicPost = async (req: Request, res: Response) => {
                 authorId 
             }
         });
-        console.log("sending webhoook...");
-        // We do not 'await' this! We drop it in the queue and instantly return the API response to the user so they don't have to wait for the webhook to send.
+        
+        // I do not 'await' this! I drop it in the queue and instantly return the API response to the user so they don't have to wait for the webhook to send.
         dispatchWebhook(tenantId, 'post.created', newPost);
         console.log("webhoook sent");
+
+        //boardcast to everyone who has joind that board.
+        io.to(boardId).emit("post-created", newPost);
 
         return ApiResponseHandler.sendSuccess(res, newPost);
     } catch (error) {
