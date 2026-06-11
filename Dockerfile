@@ -17,12 +17,9 @@ RUN npx prisma generate
 # 6. Copy your code files over
 COPY . .
 
-# 7. Compile TypeScript to JavaScript
-RUN npm run build
-
-# 8. Expose ports
+# 7. Expose ports
 EXPOSE 5000
 
-# 9. Start Production Server (Default to API, override on Render for Worker)
+# 8. Start Production Server using tsx (Bypasses ESM extension issues)
 CMD ["npm", "run", "start:api"]
 # CMD ["npm", "run", "start:worker"]
