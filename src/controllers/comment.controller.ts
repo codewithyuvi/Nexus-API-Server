@@ -29,6 +29,7 @@ export const createComment = async (req: Request, res: Response) => {
       },
     });
 
+    const post = await prisma.post.findUnique({ where: { id: postId }, select: { boardId: true } });
     if (post) {
       getIO().to(post.boardId).emit("comment-created", { postId, comment: newComment });
     }
