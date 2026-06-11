@@ -18,7 +18,9 @@ export const createBoard = async (req: Request, res: Response) => {
         
         // Ensure slug is unique per tenant by appending a random string
         slug = `${slug}-${Math.random().toString(36).substring(2, 6)}`;
-        const newBoard = await prisma.board.create({
+        
+        // RLS Extension automatically injects tenantId, but TypeScript still requires it at compile-time!
+        const newBoard = await authReq.prisma.board.create({
             data: {
                 tenantId,
                 name,
@@ -59,8 +61,8 @@ export const getBoards = async (req: Request, res: Response) => {
             return ApiResponseHandler.sendError(res, "Organization context is missing", 400);
         }
 
-        const boards = await prisma.board.findMany({
-            where: {tenantId: tenantId},
+        // RLS Extension automatically filters by tenantId!
+        const boards = await authReq.prisma.board.findMany({
             orderBy: {createdAt: 'desc'}
         });
 
@@ -79,11 +81,9 @@ export const deleteBoard = async (req: Request, res: Response) => {
         const tenantId = (authReq.auth.orgId || (authReq.auth.claims as any)?.o?.id) as string;
         const boardId = req.params.boardId as string;
 
-        const deletedBoard = await prisma.board.delete({
-            where: {
-                id: boardId,
-                tenantId: tenantId
-            }
+        // RLS Extension automatically prevents deleting other tenants' boards!
+        const deletedBoard = await authReq.prisma.board.delete({
+            where: { id: boardId }
         });
 
         // auditing logs

@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
-import { prisma } from "../utils/prisma";
+import { prisma, withTenant } from "../utils/prisma";
 import { ApiResponseHandler } from "../utils/apiResponse";
 import { redisClient } from "../utils/redis";
 
 export interface PublicApiRequest extends Request {
     tenantId?: string;
+    prisma?: ReturnType<typeof withTenant>;
 }
 
 export const requireApiKey = async (req: PublicApiRequest, res: Response, next: NextFunction) => {
@@ -23,8 +24,9 @@ export const requireApiKey = async (req: PublicApiRequest, res: Response, next: 
             return ApiResponseHandler.sendError(res, "Invalid API Key", 401);
         }
 
-        // Securely attach the Tenant ID to the request!
+        // Securely attach the Tenant ID and isolated Prisma client to the request!
         req.tenantId = foundKey.tenantId;
+        req.prisma = withTenant(foundKey.tenantId);
 
         // Wallet Paywall Logic
         const creditKey = `credits:${foundKey.tenantId}`;

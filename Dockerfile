@@ -17,8 +17,12 @@ RUN npx prisma generate
 # 6. Copy your code files over
 COPY . .
 
-# 7. Expose ports
+# 7. Compile TypeScript to JavaScript
+RUN npm run build
+
+# 8. Expose ports
 EXPOSE 5000
 
-# 8. Start watch tool
-CMD ["npm", "run", "dev"]
+# 9. Start Production Server (Default to API, override on Render for Worker)
+CMD ["npm", "run", "start:api"]
+# CMD ["npm", "run", "start:worker"]

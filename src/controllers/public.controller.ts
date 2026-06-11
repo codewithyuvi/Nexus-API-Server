@@ -3,7 +3,7 @@ import { ApiResponseHandler } from "../utils/apiResponse";
 import type { PublicApiRequest } from "../middleware/api.middleware";
 import type { Response, Request } from "express";
 import { dispatchWebhook } from "../queues/outboundWebhook.queue";
-import {io} from "../index";
+import { getIO } from "../utils/socket";
 
 // GET /api/v1/public/boards/:slug
 export const getPublicBoard = async (req: Request, res: Response) => {
@@ -12,10 +12,10 @@ export const getPublicBoard = async (req: Request, res: Response) => {
         const tenantId = publicReq.tenantId as string;
         const slug = req.params.slug as string;
 
-        const board = await prisma.board.findUnique({
-            where: {
-                tenantId_slug: { tenantId, slug } 
-            },
+        // RLS intercepts this and magically appends `AND tenantId = ...`
+        // Because of RLS, we do NOT use findUnique, we use findFirst because we don't have a compound index on just slug. Wait, actually we have @@unique([tenantId, slug]), so findFirst is perfectly fast!
+        const board = await publicReq.prisma!.board.findFirst({
+            where: { slug },
             include: {
                 posts: {
                     where: { status: "OPEN" }, // Only show open posts to the public
@@ -51,7 +51,8 @@ export const createPublicPost = async (req: Request, res: Response) => {
         }
 
         console.log("Before new post");
-        const newPost = await prisma.post.create({
+        // RLS auto-injects tenantId, but TypeScript requires it here!
+        const newPost = await publicReq.prisma!.post.create({
             data: {
                 tenantId,
                 boardId,
@@ -66,7 +67,7 @@ export const createPublicPost = async (req: Request, res: Response) => {
         console.log("webhoook sent");
 
         //boardcast to everyone who has joind that board.
-        io.to(boardId).emit("post-created", newPost);
+        getIO().to(boardId).emit("post-created", newPost);
 
         return ApiResponseHandler.sendSuccess(res, newPost);
     } catch (error) {
@@ -86,22 +87,23 @@ export const publicUpvotePost = async (req: Request, res: Response) => {
             return ApiResponseHandler.sendError(res, "authorId is required to upvote", 400);
         }
 
-        const existingVote = await prisma.upvote.findUnique({
-            where: { postId_authorId: { postId, authorId } }
+        // RLS Extension auto-injects tenantId
+        const existingVote = await publicReq.prisma!.upvote.findFirst({
+            where: { postId, authorId }
         });
 
-        const post = await prisma.post.findUnique({ where: { id: postId }, select: { boardId: true } });
+        const post = await publicReq.prisma!.post.findFirst({ where: { id: postId }, select: { boardId: true } });
         if (!post) return ApiResponseHandler.sendError(res, "Post not found", 404);
 
         if (existingVote) {
-            await prisma.upvote.delete({ where: { id: existingVote.id } });
-            io.to(post.boardId).emit("post-upvoted", { postId, increment: -1 });
+            await publicReq.prisma!.upvote.delete({ where: { id: existingVote.id } });
+            getIO().to(post.boardId).emit("post-upvoted", { postId, increment: -1 });
             return ApiResponseHandler.sendSuccess(res, { voted: false });
         } else {
-            await prisma.upvote.create({
+            await publicReq.prisma!.upvote.create({
                 data: { tenantId, postId, authorId }
             });
-            io.to(post.boardId).emit("post-upvoted", { postId, increment: 1 });
+            getIO().to(post.boardId).emit("post-upvoted", { postId, increment: 1 });
             return ApiResponseHandler.sendSuccess(res, { voted: true });
         }
     } catch (error) {
@@ -122,10 +124,10 @@ export const createPublicComment = async (req: Request, res: Response) => {
             return ApiResponseHandler.sendError(res, "content and authorId are required", 400);
         }
 
-        const post = await prisma.post.findUnique({ where: { id: postId }, select: { boardId: true } });
+        const post = await publicReq.prisma!.post.findFirst({ where: { id: postId }, select: { boardId: true } });
         if (!post) return ApiResponseHandler.sendError(res, "Post not found", 404);
 
-        const newComment = await prisma.comment.create({
+        const newComment = await publicReq.prisma!.comment.create({
             data: {
                 tenantId,
                 postId,
@@ -136,7 +138,7 @@ export const createPublicComment = async (req: Request, res: Response) => {
             }
         });
 
-        io.to(post.boardId).emit("comment-created", { postId, comment: newComment });
+        getIO().to(post.boardId).emit("comment-created", { postId, comment: newComment });
 
         return ApiResponseHandler.sendSuccess(res, newComment);
     } catch (error) {

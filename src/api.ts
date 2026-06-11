@@ -13,16 +13,11 @@ import boardRoutes from "./routes/board.routes";
 import apiKeyRoutes from "./routes/apikey.routes";
 import publicRoutes from "./routes/public.routes";
 import billingRoutes from "./routes/billing.routes";
-import "./workers/audit.worker";
-import "./workers/billing.worker";
-import "./queues/billing.queue";
-import "./workers/outboundWebhook.worker";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 const httpServer = createServer(app);
-// Initialize WebSockets safely!
 export const io = initSocket(httpServer);
 
 app.use("/api/webhooks", webHookRoutes);
@@ -38,13 +33,8 @@ app.use(
 // Register Routes
 app.use("/api/health", healthRoutes);
 app.use("/api/user", userRoutes);
-
-// Board Routes
 app.use("/api/boards", boardRoutes);
-
-// Api Keys
 app.use("/api/keys", apiKeyRoutes);
-
 app.use("/api/v1/public", publicRoutes);
 app.use("/api/billing", billingRoutes);
 
@@ -52,5 +42,5 @@ app.use("/api/billing", billingRoutes);
 app.use(ErrorHandler);
 
 httpServer.listen(PORT, () => {
-  console.log(`Production-ready Server running on port ${PORT}`);
+  console.log(`🚀 Production API Server running on port ${PORT}`);
 });

@@ -4,7 +4,7 @@ import type { AuthRequest } from "../middleware/auth.middleware";
 import type { Request, Response } from "express";
 import { auditLogsQueue } from "../queues/audit.queue";
 import { dispatchWebhook } from "../queues/outboundWebhook.queue";
-import { io } from "../index";
+import { getIO } from "../utils/socket";
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
@@ -78,7 +78,7 @@ export const createPost = async (req: Request, res: Response) => {
     dispatchWebhook(tenantId, "post.created", newPost);
 
     //boardcast 
-    io.to(boardId).emit("post-created", newPost);
+    getIO().to(boardId).emit("post-created", newPost);
     
     return ApiResponseHandler.sendSuccess(res, newPost);
   } catch (error) {
@@ -100,7 +100,7 @@ export const deletePost = async (req: Request, res: Response) => {
       where: { id: postId, boardId, tenantId },
     });
 
-    io.to(boardId).emit("post-deleted", { postId });
+    getIO().to(boardId).emit("post-deleted", { postId });
 
     // auditing logs
     await auditLogsQueue.add("logs", {
@@ -137,7 +137,7 @@ export const updatePostStatus = async (req: Request, res: Response) => {
       data: { status },
     });
 
-    io.to(boardId).emit("post-updated", { postId, status });
+    getIO().to(boardId).emit("post-updated", { postId, status });
 
     await auditLogsQueue.add("logs", {
       tenantId,
@@ -169,7 +169,7 @@ export const toggleUpvote = async (req: Request, res: Response) => {
 
     if (existingVote) {
       await prisma.upvote.delete({ where: { id: existingVote.id } });
-      io.to(boardId).emit("post-upvoted", { postId, increment: -1 });
+      getIO().to(boardId).emit("post-upvoted", { postId, increment: -1 });
       await auditLogsQueue.add("logs", {
         tenantId,
         userId: authReq.auth.userId,
@@ -181,7 +181,7 @@ export const toggleUpvote = async (req: Request, res: Response) => {
       await prisma.upvote.create({
         data: { tenantId, postId, authorId: userId },
       });
-      io.to(boardId).emit("post-upvoted", { postId, increment: 1 });
+      getIO().to(boardId).emit("post-upvoted", { postId, increment: 1 });
       await auditLogsQueue.add("logs", {
         tenantId,
         userId: authReq.auth.userId,

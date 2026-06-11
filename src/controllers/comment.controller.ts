@@ -3,7 +3,7 @@ import { ApiResponseHandler } from "../utils/apiResponse";
 import type { AuthRequest } from "../middleware/auth.middleware";
 import type { Request, Response } from "express";
 import { auditLogsQueue } from "../queues/audit.queue";
-import { io } from "../index";
+import { getIO } from "../utils/socket";
 
 // POST /api/boards/:boardId/posts/:postId/comments
 export const createComment = async (req: Request, res: Response) => {
@@ -29,9 +29,8 @@ export const createComment = async (req: Request, res: Response) => {
       },
     });
 
-    const post = await prisma.post.findUnique({ where: { id: postId }, select: { boardId: true } });
     if (post) {
-      io.to(post.boardId).emit("comment-created", { postId, comment: newComment });
+      getIO().to(post.boardId).emit("comment-created", { postId, comment: newComment });
     }
 
     // auditing logs
@@ -64,7 +63,7 @@ export const deleteComment = async (req: Request, res: Response) => {
 
     const post = await prisma.post.findUnique({ where: { id: deletedComment.postId }, select: { boardId: true } });
     if (post) {
-      io.to(post.boardId).emit("comment-deleted", { postId: deletedComment.postId, commentId });
+      getIO().to(post.boardId).emit("comment-deleted", { postId: deletedComment.postId, commentId });
     }
 
     // auditing logs
