@@ -1,1 +1,1 @@
-export const redisConnection = {host: '127.0.0.1', port: 6379}
+export const redisConnection = process.env.REDIS_URL as string;
