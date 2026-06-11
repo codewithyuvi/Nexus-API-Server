@@ -5,7 +5,8 @@ import Redis from "ioredis";
 let io: Server;
 
 export const initSocket = (httpServer: any) => {
-  const pubClient = new Redis(process.env.REDIS_URL as string);
+  if (!process.env.REDIS_URL) throw new Error("CRITICAL ERROR: REDIS_URL missing!");
+  const pubClient = new Redis(process.env.REDIS_URL);
   const subClient = pubClient.duplicate();
 
   io = new Server(httpServer, {
