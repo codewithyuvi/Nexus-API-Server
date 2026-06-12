@@ -7,3 +7,9 @@ if (!process.env.REDIS_URL) {
 export const redisConnection = new Redis(process.env.REDIS_URL, {
   maxRetriesPerRequest: null,
 });
+
+redisConnection.on('error', (err: any) => {
+  // Suppress verbose ECONNREFUSED logs during boot retries
+  if (err.code === 'ECONNREFUSED') return;
+  console.error("Redis Connection Error:", err.message);
+});

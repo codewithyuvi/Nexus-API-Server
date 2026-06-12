@@ -9,6 +9,14 @@ export const initSocket = (httpServer: any) => {
   const pubClient = new Redis(process.env.REDIS_URL);
   const subClient = pubClient.duplicate();
 
+  // Suppress verbose reconnect errors during boot
+  pubClient.on('error', (err: any) => {
+    if (err.code !== 'ECONNREFUSED') console.error('Redis PubClient Error:', err.message);
+  });
+  subClient.on('error', (err: any) => {
+    if (err.code !== 'ECONNREFUSED') console.error('Redis SubClient Error:', err.message);
+  });
+
   io = new Server(httpServer, {
     cors: {
       origin: [
