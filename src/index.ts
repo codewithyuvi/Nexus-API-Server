@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import cron from "node-cron";
 
 import { createServer } from "http";
 import { initSocket } from "./utils/socket";
@@ -56,6 +57,16 @@ app.use("/api/billing", billingRoutes);
 
 // Global Error Handler
 app.use(ErrorHandler);
+
+// --- RENDER FREE TIER KEEP-AWAKE (USING CRON) ---
+// Pings the server every 13 minutes, but ONLY between 4 AM UTC and 3:59 PM UTC
+// (This is exactly 9:30 AM IST to 9:30 PM IST).
+// The cron expression "*/13 4-15 * * *" guarantees it stays within our 12-hour budget!
+cron.schedule('*/13 4-15 * * *', () => {
+  fetch('https://nexus-api-worker.onrender.com/api/health')
+    .then(() => console.log(`[${new Date().toISOString()}] Cron ping successful to keep Render awake`))
+    .catch((err) => console.error('Cron ping failed:', err.message));
+});
 
 httpServer.listen(PORT, () => {
   console.log(`Production-ready Server running on port ${PORT}`);
