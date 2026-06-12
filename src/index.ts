@@ -31,7 +31,9 @@ app.use(express.json());
 app.use(
   cors({
     origin: [
-      "http://localhost:3000", 
+      "http://localhost:3000",
+      "http://localhost:5173", 
+      "https://nexus-customer.vercel.app",
       "https://nexus-api-client.vercel.app",
       process.env.CLIENT_URL || "http://localhost:3000"
     ],

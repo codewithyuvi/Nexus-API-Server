@@ -18,9 +18,9 @@ export const getPublicBoard = async (req: Request, res: Response) => {
             where: { slug },
             include: {
                 posts: {
-                    where: { status: "OPEN" }, // Only show open posts to the public
                     orderBy: { createdAt: 'desc' },
                     include: {
+                        upvotes: { select: { authorId: true } },
                         _count: {
                             select: { upvotes: true, comments: true }
                         }
@@ -97,13 +97,13 @@ export const publicUpvotePost = async (req: Request, res: Response) => {
 
         if (existingVote) {
             await publicReq.prisma!.upvote.delete({ where: { id: existingVote.id } });
-            getIO().to(post.boardId).emit("post-upvoted", { postId, increment: -1 });
+            getIO().to(post.boardId).emit("post-upvoted", { postId, increment: -1, authorId });
             return ApiResponseHandler.sendSuccess(res, { voted: false });
         } else {
             await publicReq.prisma!.upvote.create({
                 data: { tenantId, postId, authorId }
             });
-            getIO().to(post.boardId).emit("post-upvoted", { postId, increment: 1 });
+            getIO().to(post.boardId).emit("post-upvoted", { postId, increment: 1, authorId });
             return ApiResponseHandler.sendSuccess(res, { voted: true });
         }
     } catch (error) {
@@ -144,5 +144,24 @@ export const createPublicComment = async (req: Request, res: Response) => {
     } catch (error) {
         console.error("Create Public Comment Error:", error);
         return ApiResponseHandler.sendError(res, "Failed to submit comment", 500);
+    }
+};
+
+// GET /api/v1/public/posts/:postId/comments
+export const getPublicComments = async (req: Request, res: Response) => {
+    try {
+        const publicReq = req as unknown as PublicApiRequest;
+        const postId = req.params.postId as string;
+
+        // Fetch non-internal comments
+        const comments = await publicReq.prisma!.comment.findMany({
+            where: { postId, isInternal: false },
+            orderBy: { createdAt: 'asc' }
+        });
+
+        return ApiResponseHandler.sendSuccess(res, comments);
+    } catch (error) {
+        console.error("Get Public Comments Error:", error);
+        return ApiResponseHandler.sendError(res, "Failed to fetch comments", 500);
     }
 };

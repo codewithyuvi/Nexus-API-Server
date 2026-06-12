@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireApiKey } from "../middleware/api.middleware";
-import { getPublicBoard, createPublicPost, publicUpvotePost, createPublicComment } from "../controllers/public.controller";
+import { getPublicBoard, createPublicPost, publicUpvotePost, createPublicComment, getPublicComments } from "../controllers/public.controller";
 import { trackApiUsage } from "../middleware/apiUsage.middleware";
 
 const router = Router();
@@ -12,5 +12,6 @@ router.get('/boards/:slug', getPublicBoard as any);
 router.post('/boards/:boardId/posts', createPublicPost as any);
 router.post('/posts/:postId/upvote', publicUpvotePost as any);
 router.post('/posts/:postId/comments', createPublicComment as any);
+router.get('/posts/:postId/comments', getPublicComments as any);
 
 export default router;
