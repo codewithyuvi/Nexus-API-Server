@@ -6,7 +6,7 @@ let io: Server;
 
 export const initSocket = (httpServer: any) => {
   if (!process.env.REDIS_URL) throw new Error("CRITICAL ERROR: REDIS_URL missing!");
-  const pubClient = new Redis(process.env.REDIS_URL);
+  const pubClient = new Redis(process.env.REDIS_URL, { family: 0 });
   const subClient = pubClient.duplicate();
 
   // Suppress verbose reconnect errors during boot
