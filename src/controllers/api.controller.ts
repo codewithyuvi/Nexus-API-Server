@@ -62,9 +62,13 @@ export const revokeKey = async (req: Request, res: Response) => {
         const keyId = req.params.keyId as string;
 
         // Prisma checks both ID and tenantId to prevent someone from revoking another company's key
-        await prisma.apiKey.delete({
+        const deleted = await prisma.apiKey.deleteMany({
             where: { id: keyId, tenantId } 
         });
+
+        if (deleted.count === 0) {
+            return ApiResponseHandler.sendError(res, "Key not found or unauthorized", 404);
+        }
 
         await auditLogsQueue.add("logs", {
             tenantId,

@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { requireApiKey } from "../middleware/api.middleware";
 import { getPublicBoard, createPublicPost, publicUpvotePost, createPublicComment, getPublicComments } from "../controllers/public.controller";
-import { trackApiUsage } from "../middleware/apiUsage.middleware";
 
 const router = Router();
 

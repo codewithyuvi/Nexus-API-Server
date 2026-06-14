@@ -10,28 +10,7 @@ const billingJob = async (job:any) => {
     console.log(`[BullMQ] Syncing ${allTenants.length} tenants with PostgreSQL.`);
 
     for(const tenant of allTenants){
-        const usageKey = `usage:${tenant.id}`;
-        const usageString = await redisClient.get(usageKey);
-        const usageCount = Number(usageString || 0);
-        console.log(usageCount);
-        if(usageCount > 0 ){
-            console.log(`Syncing ${usageCount} used credits for Tenant ${tenant.id} to Postgres...`);            
-            
-            try {
-                // Deduct the usage from their master database balance
-                await prisma.tenant.update({
-                    where: { id: tenant.id},
-                    data: { apiCredits: {decrement: usageCount}}
-                });
-
-                //clear the redis usage buffer now
-                await redisClient.del(usageKey);
-
-            } catch (error) {
-                console.error(`Failed to sync tenant ${tenant.id}. Error:`, error);
-                // We do NOT delete the redis key, ensuring it stays in the queue to be retried next hour
-            }
-        }
+        // Future billing logic for subscriptions will go here
     }
 }
 

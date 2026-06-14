@@ -14,6 +14,7 @@ import boardRoutes from "./routes/board.routes";
 import apiKeyRoutes from "./routes/apikey.routes";
 import publicRoutes from "./routes/public.routes";
 import billingRoutes from "./routes/billing.routes";
+import dashboardRoutes from "./routes/dashboard.routes";
 import "./workers/audit.worker";
 import "./workers/billing.worker";
 import "./queues/billing.queue";
@@ -54,6 +55,7 @@ app.use("/api/keys", apiKeyRoutes);
 
 app.use("/api/v1/public", publicRoutes);
 app.use("/api/billing", billingRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Global Error Handler
 app.use(ErrorHandler);

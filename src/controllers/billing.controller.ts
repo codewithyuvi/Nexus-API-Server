@@ -79,12 +79,17 @@ export const getCredits = async (req: Request, res: Response) => {
 
         const tenant = await prisma.tenant.findUnique({
             where: { id: tenantId },
-            select: { apiCredits: true }
+            select: { 
+                apiCredits: true
+            }
         });
 
         if (!tenant) return ApiResponseHandler.sendError(res, "Tenant not found", 404);
 
-        return ApiResponseHandler.sendSuccess(res, { credits: tenant.apiCredits });
+        return ApiResponseHandler.sendSuccess(res, { 
+            creditsLimit: tenant.apiCredits,
+            creditsUsed: 0 // Dummy value since we no longer track it
+        });
     } catch (error) {
         console.error("Get Credits Error:", error);
         return ApiResponseHandler.sendError(res, "Failed to fetch credits", 500);
