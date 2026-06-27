@@ -4,7 +4,8 @@ Welcome to the backend engine for **Nexus API SaaS**! This is a high-performance
 
 ## 🌐 Ecosystem Links
 - **Admin Dashboard Client (Next.js):** [Nexus API Client GitHub](https://github.com/codewithyuvi/nexus-api-client)
-- **Live Customer Demo Portal:** [nexus-customer.vercel.app](https://nexus-customer.vercel.app/)
+- **Nexus API Portal:** [nexus-api-client.vercel.app](https://nexus-api-client.vercel.app)
+- **Live Customer Demo Portal(For Testing):** [nexus-customer.vercel.app](https://nexus-customer.vercel.app/)
 
 ## 🚀 What is this project?
 
